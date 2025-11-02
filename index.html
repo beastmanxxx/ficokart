@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="applogo.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="applogo.png" sizes="16x16" type="image/png">
+
+    <title>Ficokart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@100..900&family=Honk:SHLN@44.1&family=Lexend:wght@100..900&family=Macondo&family=Mrs+Sheppards&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS & JS for Address Management -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <!-- Razorpay Payment Gateway -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Custom Notification Container -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- Add Subcategory Modal -->
+    <div class="add-subcategory-modal" id="addSubcategoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div class="add-subcategory-modal-content" style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="add-subcategory-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #e74c3c; padding-bottom: 15px;">
+                <h2 style="margin: 0; color: #2c3e50; font-size: 24px;">Add Subcategory</h2>
+                <button onclick="closeAddSubcategoryModal()" style="background: #e74c3c; color: white; border: none; border-radius: 8px; width: 35px; height: 35px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <div class="add-subcategory-modal-body">
+                <form id="addSubcategoryForm">
+                    <input type="text" id="newSubcategoryName" placeholder="Subcategory Name" required style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                    <input type="url" id="newSubcategoryImage" placeholder="Subcategory Image URL (optional)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                    <input type="url" id="newSubcategoryBanner" placeholder="Subcategory Banner URL (optional)" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                    
+                    <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                        <button type="button" onclick="closeAddSubcategoryModal()" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">Cancel</button>
+                        <button type="button" onclick="saveNewSubcategory()" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">Add Subcategory</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="edit-category-modal" id="editCategoryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div class="edit-category-modal-content" style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="edit-category-modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 15px;">
+                <h2 style="margin: 0; color: #2c3e50; font-size: 24px;">✏️ Edit Category</h2>
+                <button onclick="closeEditCategoryModal()" style="background: #e74c3c; color: white; border: none; border-radius: 8px; width: 35px; height: 35px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <div class="edit-category-modal-body">
+                <form id="editCategoryForm">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Category Name:</label>
+                        <input type="text" id="editCategoryName" placeholder="Category Name" required style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Category Image URL:</label>
+                        <input type="url" id="editCategoryImage" placeholder="Category Image URL" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Category Banner URL:</label>
+                        <input type="url" id="editCategoryBanner" placeholder="Category Banner URL (optional)" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
+                    </div>
+                    
+                    <!-- Product Selection Section -->
+                    <div style="margin-bottom: 20px; padding: 15px; border: 2px solid #28a745; border-radius: 8px; background: #f8fff8;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #2c3e50; font-size: 16px;">🛍️ Assign Products to Category:</label>
+                        
+                        <!-- Product Search Bar -->
+                        <div style="margin-bottom: 10px;">
+                            <input type="text" id="editCategoryProductSearch" placeholder="🔍 Search products by name or keywords..." 
+                                   style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; box-sizing: border-box;" 
+                                   oninput="filterProductsInEditModal(this.value)">
+                        </div>
+                        
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background: white;">
+                            <div id="editCategoryProductsList" style="display: grid; gap: 8px;">
+                                <!-- Products will be loaded here -->
+                                <div style="text-align: center; color: #666; padding: 20px;">Loading products...</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 11px; color: #666;">
+                            💡 <strong>Tip:</strong> Use search bar to quickly find products. Select products that belong to this category.
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                        <button type="button" onclick="closeEditCategoryModal()" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">Cancel</button>
+                        <button type="button" onclick="saveEditedCategory()" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500;">✅ Update Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal (Hidden by default) -->
+    <div class="login-modal" id="loginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 3000; justify-content: center; align-items: center;">
+        <div class="login-container" style="display: flex; position: relative;">
+            <button onclick="closeLoginModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+            
+            <div class="logo-section">
+                <h1 style="color: #1f2937; font-weight: 700;">Ficokart</h1>
+                <h2>Welcome</h2>
+                <p>Login or register to use app features</p>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm" style="display: block !important;">
+                <div class="form-group">
+                    <input type="text" id="loginEmailOrPhone" placeholder="Email or Phone Number" required>
+                </div>
+                <div class="form-group password-input-container">
+                    <input type="password" id="loginPassword" placeholder="Password" required>
+                    <span class="password-toggle" onclick="togglePassword('loginPassword')">
+                        <i class="fas fa-eye" id="loginPasswordToggle"></i>
+                    </span>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+                <div class="form-switch">
+                    <p>Don't have an account? <a href="#" onclick="switchToRegister()">Register here</a></p>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form class="auth-form" id="registerForm" style="display: none !important;" onsubmit="event.preventDefault(); registerSubmitHandler();">
+                <div class="form-group">
+                    <input type="text" id="registerName" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" id="registerEmail" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <input type="tel" id="registerPhone" placeholder="Phone Number" required>
+                </div>
+                <div class="form-group password-input-container">
+                    <input type="password" id="registerPassword" placeholder="Password (min 6 characters)" required>
+                    <span class="password-toggle" onclick="togglePassword('registerPassword')">
+                        <i class="fas fa-eye" id="registerPasswordToggle"></i>
+                    </span>
+                </div>
+                <div class="form-group password-input-container">
+                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                    <span class="password-toggle" onclick="togglePassword('confirmPassword')">
+                        <i class="fas fa-eye" id="confirmPasswordToggle"></i>
+                    </span>
+                </div>
+                <button type="submit" class="auth-btn">Register</button>
+                <div class="form-switch">
+                    <p>Already have an account? <a href="#" onclick="switchToLogin()">Login here</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden until login) -->
+    <div class="main-app" id="mainApp">
+        <!-- Single Navbar (position controlled by JavaScript) -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <!-- Top Row: Logo and Actions -->
+                <div class="nav-top">
+                    <a href="#" class="logo">
+                        <img src="logo.png" alt="Logo">
+                    </a>
+
+                    <div class="nav-actions">
+                        <button class="icon-btn admin-btn" id="adminBtn" style="display: none;" onclick="openAdminPanel()">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                            </svg>
+                        </button>
+
+                        <button class="icon-btn delivery-btn" id="deliveryBtn" style="display: none;" onclick="openDeliveryPanel()">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3,4H7.5L9.5,6H20A1,1 0 0,1 21,7V19A1,1 0 0,1 20,20H4A1,1 0 0,1 3,19V4M5,8V18H19V8H5M7,10H17V12H7V10M7,14H17V16H7V14Z"/>
+                            </svg>
+                        </button>
+
+                        <button class="icon-btn profile-btn" id="profileBtn" onclick="handleProfileClick()">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Address Text - Simple -->
+                <div class="nav-address-simple" onclick="openAddressPopup()" id="navAddressDisplay">
+                    <span class="nav-address-text">Deliver to:</span>
+                    <span class="nav-address-location" id="navAddressText">Not Set</span>
+                </div>
+            </div>
+        </nav>
+
+
+        <div class="main-content">
+            <!-- Home Section -->
+            <div id="homeSection" class="app-section active">
+                <!-- Search Bar and Categories Container -->
+                <div class="search-categories-container" id="searchCategoriesContainer">
+                    <div class="refresh-indicator" id="refreshIndicator">🔄 Pull to refresh</div>
+                    <!-- Center Loading Spinner -->
+                    <div class="refresh-loader" id="refreshLoader">
+                        <div class="refresh-loader-spinner"></div>
+                    </div>
+                    <div class="container">
+                        <div class="search-bar-container">
+                            <div class="search-input-wrapper" onclick="redirectToSearch()" style="cursor: pointer;">
+                                <input type="text" id="mainSearchInput" placeholder="Search products..." class="search-input" style="height: 50px; padding: 16px 60px 16px 24px;" onclick="redirectToSearch()" onfocus="redirectToSearch()" onkeyup="handleMainSearchKeyup(event)">
+                                <button class="search-icon-btn" onclick="redirectToSearch()">🔍</button>
+                            </div>
+                        </div>
+                        
+                        
+                        <!-- Categories Section -->
+                        <div class="categories-row" id="categoriesGrid">
+                            <!-- Categories will be dynamically added -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hero Banner -->
+                <div class="container" style="margin-top: 30px;">
+                    <div class="slideshow-container" id="slideshowContainer">
+                        <!-- Slides will be dynamically added by admin -->
+                    </div>
+                    
+                    <!-- Slideshow Dots -->
+                    <div class="dots-container" id="dotsContainer" style="margin: 0;">
+                        <!-- Dots will be dynamically added based on slides -->
+                    </div>
+                </div>
+
+                <!-- Events Section (replacing Featured Products) -->
+                <div class="events-section" id="eventsSection">
+                    <!-- Events will be populated here -->
+                </div>
+                
+                <!-- Ficokart Footer -->
+                <div class="ficokart-footer">
+                    <div class="container">
+                        <div class="footer-content">
+                            <h1 style="color: #1f2937; font-weight: 700; margin: 0; font-size: 18px;">Ficokart</h1>
+                        </div>
+                        <div class="footer-reserved">All Rights Reserved</div>
+                        <div class="footer-privacy">
+                            <button onclick="openPrivacyModalInSection('home')" style="background: none; border: none; color: #666; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 5px 0; margin-top: 5px;">Privacy Policy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Section -->
+            <div id="categoriesSection" class="app-section">
+                <div class="categories-page">
+                    <div class="container">
+                        <!-- Categories Section Title -->
+                        <div class="categories-section-title">
+                            <h2 class="geologica-bold">All Categories</h2>
+                        </div>
+                        <!-- Category Events Container (Only category event cards will show here) -->
+                        <div class="category-events-container" id="categoryEventsContainer">
+                            <!-- Category events will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Ficokart Footer -->
+                    <div class="ficokart-footer">
+                        <div class="container">
+                            <div class="footer-content">
+                                <h1 style="color: #1f2937; font-weight: 700; margin: 0; font-size: 18px;">Ficokart</h1>
+                            </div>
+                            <div class="footer-reserved">All Rights Reserved</div>
+                        <div class="footer-privacy">
+                            <button onclick="openPrivacyModalInSection('categories')" style="background: none; border: none; color: #666; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 5px 0; margin-top: 5px;">Privacy Policy</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Section -->
+            <div id="searchSection" class="app-section">
+                <div class="search-page">
+                    <div class="container">
+                        <div class="search-header">
+                            <div class="search-bar-container">
+                                <div class="search-input-wrapper">
+                                    <input type="text" id="searchInput" placeholder="Search products..." class="search-input">
+                                    <button class="search-icon-btn" onclick="performSearch()">🔍</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="search-results">
+                            <div class="products-grid" id="searchProductsGrid">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ficokart Footer -->
+                    <div class="ficokart-footer">
+                        <div class="container">
+                            <div class="footer-content">
+                                <h1 style="color: #1f2937; font-weight: 700; margin: 0; font-size: 18px;">Ficokart</h1>
+                            </div>
+                            <div class="footer-reserved">All Rights Reserved</div>
+                        <div class="footer-privacy">
+                            <button onclick="openPrivacyModal()" style="background: none; border: none; color: #666; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 5px 0; margin-top: 5px;">Privacy Policy</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="ordersSection" class="app-section">
+                <div class="orders-page">
+                    <div class="container">
+                        <h2 class="section-title geologica-bold">My Orders</h2>
+                        
+                        <!-- Order Tabs -->
+                        <div style="display: flex; gap: 0; margin-bottom: 20px; background: #f8f9fa; border-radius: 12px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <button id="myOrdersTab" onclick="switchOrderTab('orders')" 
+                                    style="flex: 1; padding: 18px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: linear-gradient(135deg, #3498db, #2980b9); color: white; box-shadow: 0 2px 8px rgba(52,152,219,0.3);">
+                                🛍️ My Orders
+                            </button>
+                            <button id="myRefundOrdersTab" onclick="switchOrderTab('refunds')" 
+                                    style="flex: 1; padding: 18px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: transparent; color: #666;">
+                                💰 My Refund Orders
+                            </button>
+                        </div>
+                        
+                        <!-- My Orders Content -->
+                        <div id="myOrdersContent" class="orders-content">
+                            <p style="text-align: center; color: #666; padding: 40px;" id="noOrdersMessage">No orders yet. Place your first order!</p>
+                        </div>
+                        
+                        <!-- My Refund Orders Content -->
+                        <div id="myRefundOrdersContent" class="orders-content" style="display: none;">
+                            <p style="text-align: center; color: #666; padding: 40px;" id="noRefundOrdersMessage">No refund requests yet.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Ficokart Footer -->
+                    <div class="ficokart-footer">
+                        <div class="container">
+                            <div class="footer-content">
+                                <h1 style="color: #1f2937; font-weight: 700; margin: 0; font-size: 18px;">Ficokart</h1>
+                            </div>
+                            <div class="footer-reserved">All Rights Reserved</div>
+                        <div class="footer-privacy">
+                            <button onclick="openPrivacyModalInSection('orders')" style="background: none; border: none; color: #666; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 5px 0; margin-top: 5px;">Privacy Policy</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Section -->
+            <div id="cartSection" class="app-section">
+                <div class="cart-page">
+                    <div class="container">
+                        <h2 class="section-title">Shopping Cart</h2>
+                        <div class="cart-content">
+                            <div class="cart-items-main" id="cartItemsMain">
+                                <!-- Cart items will be populated here -->
+                            </div>
+                            <div class="cart-total-main" id="cartTotalMain" style="display: none;">
+                                <div class="cart-total-amount-main" id="cartTotalAmountMain">Total: ₹0</div>
+                                <button class="cart-checkout-main" onclick="openConfirmOrderModalForAllCartItems()">Order All</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ficokart Footer -->
+                    <div class="ficokart-footer">
+                        <div class="container">
+                            <div class="footer-content">
+                                <h1 style="color: #1f2937; font-weight: 700; margin: 0; font-size: 18px;">Ficokart</h1>
+                            </div>
+                            <div class="footer-reserved">All Rights Reserved</div>
+                        <div class="footer-privacy">
+                            <button onclick="openPrivacyModal()" style="background: none; border: none; color: #666; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 5px 0; margin-top: 5px;">Privacy Policy</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Section -->
+            <div id="profileSection" class="app-section">
+                <div class="profile-page">
+                    <div class="container">
+                        <!-- Profile Header -->
+                        <div class="profile-header">
+                            <div class="profile-info">
+                                <h3 class="profile-name" id="profileName">User Name</h3>
+                                <p class="profile-email" id="profileEmail">user@example.com</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Profile Menu -->
+                        <div class="profile-menu">
+                            <div class="profile-menu-item" onclick="scrollToSavedAddresses()">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">Address</div>
+                                    <div class="menu-subtitle">Manage your addresses</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item" onclick="openWalletModal()">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">My Wallet</div>
+                                    <div class="menu-subtitle">Cashback & Balance</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item" onclick="setActiveTab('orders')">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">My Orders</div>
+                                    <div class="menu-subtitle">Track your orders</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item" onclick="openTermsModal()">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">Terms & Conditions</div>
+                                    <div class="menu-subtitle">App terms and policies</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item" onclick="openPrivacyModal()">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">Privacy Policy</div>
+                                    <div class="menu-subtitle">Data protection and privacy</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item" onclick="openFAQModal()">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">Help & Support</div>
+                                    <div class="menu-subtitle">Frequently asked questions</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">Contact Us</div>
+                                    <div class="menu-subtitle">moghaeashu@gmail.com • +91 7000842463</div>
+                                </div>
+                                <div class="menu-arrow">›</div>
+                            </div>
+                            
+                            <div class="profile-menu-item logout-item" onclick="logout()">
+                                <div class="menu-icon">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" fill="currentColor"/>
+                                    </svg>
+                                </div>
+                                <div class="menu-content">
+                                    <div class="menu-title">Log out</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Your Delivery Address Display in Profile -->
+                    <div id="profileAddressDisplay" style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; border: 1px solid #dee2e6; display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="margin: 0; color: #2c3e50; display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #28a745;">📍</span> Your Delivery Address
+                            </h3>
+                            <button onclick="openAddressMapModal()" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-size: 10px; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                ✏️ Edit Address
+                            </button>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div style="background: white; padding: 10px; border-radius: 8px; border-left: 3px solid #e74c3c;">
+                                <div style="font-size: 10px; color: #666; margin-bottom: 3px;">STATE</div>
+                                <div id="profileDisplayState" style="font-weight: 600; color: #2c3e50; font-size: 13px;"></div>
+                            </div>
+                            <div style="background: white; padding: 10px; border-radius: 8px; border-left: 3px solid #f39c12;">
+                                <div style="font-size: 10px; color: #666; margin-bottom: 3px;">CITY</div>
+                                <div id="profileDisplayCity" style="font-weight: 600; color: #2c3e50; font-size: 13px;"></div>
+                            </div>
+                            <div style="background: white; padding: 10px; border-radius: 8px; border-left: 3px solid #27ae60;">
+                                <div style="font-size: 10px; color: #666; margin-bottom: 3px;">PINCODE</div>
+                                <div id="profileDisplayPincode" style="font-weight: 600; color: #2c3e50; font-size: 13px;"></div>
+                            </div>
+                        </div>
+                        <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #9b59b6;">
+                            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">FULL ADDRESS</div>
+                            <div id="profileDisplayAddress" style="font-weight: 600; color: #2c3e50; font-size: 13px; line-height: 1.3;"></div>
+                        </div>
+                        <div style="background: white; padding: 10px; border-radius: 8px; border-left: 3px solid #1abc9c;">
+                            <div style="font-size: 10px; color: #666; margin-bottom: 3px;">NEARBY LOCATION</div>
+                            <div id="profileDisplayNearby" style="font-weight: 600; color: #2c3e50; font-size: 13px;"></div>
+                        </div>
+                        <div id="profileGoogleMapsContainer" style="margin-top: 12px;">
+                            <!-- Google Maps link will be populated here -->
+                        </div>
+                        <div style="margin-top: 12px; padding: 10px; background: rgba(40, 167, 69, 0.1); border-radius: 8px; text-align: center;">
+                            <div style="font-size: 10px; color: #28a745; font-weight: 500;">✓ This address will be used for all your orders</div>
+                        </div>
+                    </div>
+                    
+                    
+                    <!-- Terms & Conditions Modal -->
+                    <div id="termsModal" class="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 3000; justify-content: center; align-items: center;">
+                        <div class="login-container" style="display: flex; position: relative; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; background: white; border-radius: 12px;">
+                            <button onclick="closeTermsModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 1;">×</button>
+                            
+                            <div class="logo-section">
+                                <h1 style="color: #1f2937; font-weight: 700;">Ficokart</h1>
+                                <h2>Terms & Conditions</h2>
+                                <p>Ficokart App Terms of Service</p>
+                            </div>
+
+                            <div class="auth-form" style="display: block !important; padding: 10px; text-align: left; font-size: 10px; height: 100%; overflow-y: auto;">
+                                <div style="color: #2c3e50; line-height: 1.3; padding-bottom: 20px;">
+                                    <p style="margin-bottom: 8px; font-weight: 600; font-size: 13px;">Welcome to Ficokart, an online shopping platform designed to provide you with a smooth and secure shopping experience. By using our app, you agree to the following Terms and Conditions:</p>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #f59e0b;">
+                                        <h5 style="color: #3498db; margin: 0 0 3px 0; font-size: 10px;">1. Acceptance of Terms</h5>
+                                        <p style="margin: 0; font-size: 11px;">By accessing or using Ficokart, you agree to comply with these Terms. If you do not agree, please do not use the app.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #e74c3c;">
+                                        <h5 style="color: #e74c3c; margin: 0 0 3px 0; font-size: 10px;">2. Account Registration & User Responsibilities</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Users must provide accurate and complete details during registration.<br>• You are responsible for maintaining the confidentiality of your login credentials.<br>• You agree not to share your account with others.<br>• Users must be 18+ years old or have parental consent.<br>• False information may result in account suspension.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #f39c12;">
+                                        <h5 style="color: #f39c12; margin: 0 0 3px 0; font-size: 10px;">3. Eligibility</h5>
+                                        <p style="margin: 0; font-size: 11px;">You must be at least 18 years old or have the consent of a legal guardian to use this app.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #27ae60;">
+                                        <h5 style="color: #27ae60; margin: 0 0 3px 0; font-size: 10px;">4. Orders and Payments</h5>
+                                        <p style="margin: 0; font-size: 11px;">• All orders placed through Ficokart are subject to availability and confirmation.<br>• Prices listed on the app include all applicable taxes unless stated otherwise.<br>• We accept payments through UPI, Debit/Credit Card, Net Banking, and COD.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #9b59b6;">
+                                        <h5 style="color: #9b59b6; margin: 0 0 3px 0; font-size: 10px;">5. Shipping and Delivery</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Delivery timelines may vary based on your location.<br>• Delays caused by logistics or unforeseen circumstances are beyond our control.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #1abc9c;">
+                                        <h5 style="color: #1abc9c; margin: 0 0 3px 0; font-size: 10px;">6. Returns and Refunds</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Returns are accepted only if the product is damaged, defective, or incorrect.<br>• Refunds will be processed as per our Refund Policy within 5-7 business days.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #e67e22;">
+                                        <h5 style="color: #e67e22; margin: 0 0 3px 0; font-size: 10px;">7. Prohibited Activities</h5>
+                                        <p style="margin: 0; font-size: 11px;">You agree not to:<br>• Use the app for any fraudulent activity.<br>• Post harmful or offensive content.<br>• Interfere with the app's security.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #34495e;">
+                                        <h5 style="color: #34495e; margin: 0 0 3px 0; font-size: 10px;">8. Limitation of Liability</h5>
+                                        <p style="margin: 0; font-size: 11px;">Ficokart is not liable for any indirect, incidental, or consequential damages arising from the use of our app.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #16a085;">
+                                        <h5 style="color: #16a085; margin: 0 0 3px 0; font-size: 10px;">9. Privacy Policy</h5>
+                                        <p style="margin: 0; font-size: 11px;">Your personal information will be handled according to our Privacy Policy. We value your privacy and ensure your data is secure.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #8e44ad;">
+                                        <h5 style="color: #8e44ad; margin: 0 0 3px 0; font-size: 10px;">10. Changes to Terms</h5>
+                                        <p style="margin: 0; font-size: 11px;">We reserve the right to modify these Terms anytime. Users will be notified of major changes.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #2c3e50;">
+                                        <h5 style="color: #2c3e50; margin: 0 0 3px 0; font-size: 10px;">11. App Permissions & Data Usage</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Location: For delivery address and nearby services.<br>• Storage: To save app data and preferences.<br>• Camera: For profile pictures and product reviews (optional).<br>• Notifications: For order updates and offers.<br>• Internet: Required for app functionality.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #d35400;">
+                                        <h5 style="color: #d35400; margin: 0 0 3px 0; font-size: 10px;">12. Intellectual Property</h5>
+                                        <p style="margin: 0; font-size: 11px;">• All content, logos, and trademarks belong to Ficokart.<br>• Users cannot copy, distribute, or modify app content.<br>• Product images and descriptions are owned by respective brands.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #7f8c8d;">
+                                        <h5 style="color: #7f8c8d; margin: 0 0 3px 0; font-size: 10px;">13. Governing Law & Jurisdiction</h5>
+                                        <p style="margin: 0; font-size: 11px;">These Terms are governed by Indian laws. Any disputes will be resolved in Indian courts.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #c0392b;">
+                                        <h5 style="color: #c0392b; margin: 0 0 3px 0; font-size: 10px;">14. Contact Information</h5>
+                                        <p style="margin: 0; font-size: 11px;">For support or queries:<br>• Email: moghaeashu@gmail.com<br>• Phone: +91 7000842463<br>• Address: India</p>
+                                    </div>
+                                    
+                                    <p style="margin-top: 10px; font-size: 10px; color: #7f8c8d; text-align: center;">Last updated: October 2024<br>Ficokart - Online Shopping Platform<br>Made in India 🇮🇳</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Privacy Policy Modal -->
+                    <div id="privacyModal" class="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 3000; justify-content: center; align-items: center;">
+                        <div class="login-container" style="display: flex; position: relative; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; background: white; border-radius: 12px;">
+                            <button onclick="closePrivacyModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 1;">×</button>
+                            
+                            <div class="logo-section">
+                                <h1 style="color: #1f2937; font-weight: 700;">Ficokart</h1>
+                                <h2>Privacy Policy</h2>
+                                <p>Data protection and privacy</p>
+                            </div>
+
+                            <div class="auth-form" style="display: block !important; padding: 10px; text-align: left; font-size: 10px; height: 100%; overflow-y: auto;">
+                                <div style="color: #2c3e50; line-height: 1.3; padding-bottom: 20px;">
+                                    <p style="margin-bottom: 8px; font-weight: 600; font-size: 13px;">🔒 Privacy Policy for Ficokart</p>
+                                    <p style="margin-bottom: 8px; font-size: 11px;">Last Updated: October 2024</p>
+                                    <p style="margin-bottom: 8px; font-size: 11px;">Ficokart ("we", "our", "us") respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, store, and protect your data when you use our mobile application and services.</p>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #27ae60;">
+                                        <h5 style="color: #27ae60; margin: 0 0 3px 0; font-size: 10px;">1. Information We Collect</h5>
+                                        <p style="margin: 0; font-size: 11px;">We may collect:<br>
+                                        • Personal Information: Name, email address, phone number, and shipping address (when you place an order).<br>
+                                        • Usage Data: App activity, browsing behavior, and device information to improve the user experience.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #f59e0b;">
+                                        <h5 style="color: #3498db; margin: 0 0 3px 0; font-size: 10px;">2. How We Use Your Information</h5>
+                                        <p style="margin: 0; font-size: 11px;">We use your information to:<br>
+                                        • Process and deliver your orders.<br>
+                                        • Provide customer support.<br>
+                                        • Improve our services and app experience.<br>
+                                        • Send updates, offers, and promotions (only if you allow).</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #e74c3c;">
+                                        <h5 style="color: #e74c3c; margin: 0 0 3px 0; font-size: 10px;">3. Sharing of Information</h5>
+                                        <p style="margin: 0; font-size: 11px;">• We do not sell, rent, or trade your personal information.<br>
+                                        • We may share limited data with delivery partners to fulfill your order.<br>
+                                        • We may disclose information if required by law.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #f39c12;">
+                                        <h5 style="color: #f39c12; margin: 0 0 3px 0; font-size: 10px;">4. Data Security</h5>
+                                        <p style="margin: 0; font-size: 11px;">We take reasonable measures to protect your data against unauthorized access, loss, or misuse. However, no method is 100% secure.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #9b59b6;">
+                                        <h5 style="color: #9b59b6; margin: 0 0 3px 0; font-size: 10px;">5. Cookies & Tracking</h5>
+                                        <p style="margin: 0; font-size: 11px;">We may use cookies or similar technologies to improve app functionality. You can disable them in your device settings.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #1abc9c;">
+                                        <h5 style="color: #1abc9c; margin: 0 0 3px 0; font-size: 10px;">6. Your Rights</h5>
+                                        <p style="margin: 0; font-size: 11px;">You can:<br>
+                                        • Access or update your account details anytime.<br>
+                                        • Request account deletion by contacting us.<br>
+                                        • Opt out of promotional messages.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #34495e;">
+                                        <h5 style="color: #34495e; margin: 0 0 3px 0; font-size: 10px;">7. Third-Party Links</h5>
+                                        <p style="margin: 0; font-size: 11px;">Our app may contain links to third-party websites. We are not responsible for their privacy practices.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #e67e22;">
+                                        <h5 style="color: #e67e22; margin: 0 0 3px 0; font-size: 10px;">8. Policy Updates</h5>
+                                        <p style="margin: 0; font-size: 11px;">We may update this Privacy Policy from time to time. Changes will be posted in the app.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #8e44ad;">
+                                        <h5 style="color: #8e44ad; margin: 0 0 3px 0; font-size: 10px;">9. App Permissions Explained</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Location Access: To provide accurate delivery addresses and location-based services.<br>• Storage Access: To save your preferences, cart items, and app data locally.<br>• Camera Access: Optional - for profile pictures and product reviews.<br>• Notification Access: To send order updates, delivery notifications, and promotional offers.<br>• Internet Access: Essential for app functionality, product browsing, and order processing.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #2c3e50;">
+                                        <h5 style="color: #2c3e50; margin: 0 0 3px 0; font-size: 10px;">10. Data Retention</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Account data: Retained until account deletion.<br>• Order history: Kept for 7 years for legal compliance.<br>• Usage data: Anonymized after 2 years.<br>• Payment information: Not stored on our servers.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #d35400;">
+                                        <h5 style="color: #d35400; margin: 0 0 3px 0; font-size: 10px;">11. Children's Privacy</h5>
+                                        <p style="margin: 0; font-size: 11px;">Our app is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you are a parent and believe your child has provided us with personal information, please contact us.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #16a085;">
+                                        <h5 style="color: #16a085; margin: 0 0 3px 0; font-size: 10px;">12. International Data Transfers</h5>
+                                        <p style="margin: 0; font-size: 11px;">Your data is primarily stored and processed in India. If data is transferred internationally, we ensure appropriate safeguards are in place.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #c0392b;">
+                                        <h5 style="color: #c0392b; margin: 0 0 3px 0; font-size: 10px;">13. Contact Us</h5>
+                                        <p style="margin: 0; font-size: 11px;">For privacy-related questions or concerns:<br>• Email: moghaeashu@gmail.com<br>• Phone: +91 7000842463<br>• Address: India<br>• Response time: Within 48 hours</p>
+                                    </div>
+                                    
+                                    <p style="margin-top: 10px; font-size: 10px; color: #7f8c8d; text-align: center;">Last updated: October 2024<br>Ficokart - Committed to Your Privacy<br>Made in India 🇮🇳</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ Modal -->
+                    <div id="faqModal" class="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 3000; justify-content: center; align-items: center;">
+                        <div class="login-container" style="display: flex; position: relative; max-width: 600px; width: 90%; max-height: 85vh; overflow-y: auto; background: white; border-radius: 12px;">
+                            <button onclick="closeFAQModal()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666; z-index: 1;">×</button>
+                            
+                            <div class="logo-section">
+                                <h1 style="color: #1f2937; font-weight: 700;">Ficokart</h1>
+                                <h2>FAQ</h2>
+                                <p>Frequently Asked Questions</p>
+                            </div>
+
+                            <div class="auth-form" style="display: block !important; padding: 10px; text-align: left; font-size: 10px; height: 100%; overflow-y: auto;">
+                                <div style="color: #2c3e50; line-height: 1.3; padding-bottom: 20px;">
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #f59e0b;">
+                                        <h5 style="color: #3498db; margin: 0 0 3px 0; font-size: 10px;">1. What is Ficokart?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Ficokart is an online shopping app that offers a wide range of products at affordable prices with easy payment options.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #e74c3c;">
+                                        <h5 style="color: #e74c3c; margin: 0 0 3px 0; font-size: 10px;">2. How can I place an order?</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Browse the products.<br>• Add your favorite items to the cart.<br>• Proceed to checkout and make payment.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #f39c12;">
+                                        <h5 style="color: #f39c12; margin: 0 0 3px 0; font-size: 10px;">3. What payment methods do you accept?</h5>
+                                        <p style="margin: 0; font-size: 11px;">We currently accept UPI, Debit/Credit Cards, Net Banking, and Cash on Delivery (COD).</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #27ae60;">
+                                        <h5 style="color: #27ae60; margin: 0 0 3px 0; font-size: 10px;">4. How long does delivery take?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Delivery usually takes 3-7 business days, depending on your location.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #9b59b6;">
+                                        <h5 style="color: #9b59b6; margin: 0 0 3px 0; font-size: 10px;">5. Can I return a product?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Yes, if:<br>• The product is damaged or defective.<br>• You received the wrong item.<br>Return requests must be raised within 7 days of delivery.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #1abc9c;">
+                                        <h5 style="color: #1abc9c; margin: 0 0 3px 0; font-size: 10px;">6. How can I track my order?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Go to My Orders section in the app to track your shipment.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #e67e22;">
+                                        <h5 style="color: #e67e22; margin: 0 0 3px 0; font-size: 10px;">7. Is my payment secure?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Yes! We use secure payment gateways and end-to-end encryption to protect your transactions.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #34495e;">
+                                        <h5 style="color: #34495e; margin: 0 0 3px 0; font-size: 10px;">8. Do you offer refunds?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Refunds are processed to your original payment method within 5-7 business days after the return is approved.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #16a085;">
+                                        <h5 style="color: #16a085; margin: 0 0 3px 0; font-size: 10px;">9. How can I contact customer support?</h5>
+                                        <p style="margin: 0; font-size: 11px;">You can contact us via:<br>• Email: moghaeashu@gmail.com<br>• Phone/WhatsApp: +91 7000842463<br>• Response time: Within 24 hours</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #8e44ad;">
+                                        <h5 style="color: #8e44ad; margin: 0 0 3px 0; font-size: 10px;">10. Do I need an account to shop?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Yes, you need to create an account to place orders, track them, and avail offers.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #2c3e50;">
+                                        <h5 style="color: #2c3e50; margin: 0 0 3px 0; font-size: 10px;">11. What app permissions do you need?</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Location: For accurate delivery addresses<br>• Storage: To save your preferences and cart<br>• Camera: Optional - for profile pictures<br>• Notifications: For order updates and offers<br>• Internet: Essential for app functionality</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #d35400;">
+                                        <h5 style="color: #d35400; margin: 0 0 3px 0; font-size: 10px;">12. Is my personal data safe?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Yes! We follow strict data protection policies. Your data is encrypted and never shared with third parties without your consent. Read our Privacy Policy for details.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #27ae60;">
+                                        <h5 style="color: #27ae60; margin: 0 0 3px 0; font-size: 10px;">13. Do you offer cashback or rewards?</h5>
+                                        <p style="margin: 0; font-size: 11px;">Yes! Earn ₹4-9 cashback for every ₹100 you spend. Cashback is added to your wallet and can be used for future purchases.</p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 8px; padding: 8px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid #c0392b;">
+                                        <h5 style="color: #c0392b; margin: 0 0 3px 0; font-size: 10px;">14. What if I face technical issues?</h5>
+                                        <p style="margin: 0; font-size: 11px;">• Try restarting the app<br>• Check your internet connection<br>• Update to the latest version<br>• Contact support if issues persist</p>
+                                    </div>
+                                    
+                                    <p style="margin-top: 10px; font-size: 10px; color: #7f8c8d; text-align: center;">Still have questions? Contact our customer support team!<br>Ficokart - Your Trusted Shopping Partner 🛍️</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Saved Addresses Section -->
+                    <div class="container">
+                        <div class="saved-addresses-section">
+                            <h2 class="saved-addresses-title">
+                                📍 Saved Addresses
+                            </h2>
+                            <ul class="saved-addresses-list" id="savedAddresses">
+                                <!-- Saved addresses will be populated here -->
+                            </ul>
+                            <button class="add-address-btn" onclick="openAddressMapModal()">
+                                ➕ Add New Address
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Ficokart Footer -->
+                    <div class="ficokart-footer">
+                        <div class="container">
+                            <div class="footer-content">
+                                <h1 style="color: #1f2937; font-weight: 700; margin: 0; font-size: 18px;">Ficokart</h1>
+                            </div>
+                            <div class="footer-reserved">All Rights Reserved</div>
+                        <div class="footer-privacy">
+                            <button onclick="openPrivacyModal()" style="background: none; border: none; color: #666; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 5px 0; margin-top: 5px;">Privacy Policy</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Map Modal -->
+    <div class="address-map-modal" id="addressMapModal">
+        <div class="address-modal-header">
+            <h2 class="address-modal-title">📍 Add New Address</h2>
+            <button class="address-modal-close" onclick="closeAddressMapModal()">×</button>
+        </div>
+        
+        <div class="address-map-container">
+            <div class="address-map" id="addressMap"></div>
+            <div class="map-center-pin">📍</div>
+            <div class="ultra-zoom-indicator" id="ultraZoomIndicator">
+                🔍 Ultra Zoom Active - Level <span id="zoomLevel">13</span>
+            </div>
+            <div class="live-tracking-indicator" id="liveTrackingIndicator">
+                🎯 Live Tracking Active
+            </div>
+            <button class="current-location-btn" id="currentLocationBtn" onclick="useCurrentLocationInMap()">
+                📍 Use Current Location
+            </button>
+        </div>
+        
+        <div class="address-form-container">
+            <!-- Live Address Preview -->
+            <div class="address-preview-container" style="
+                background: #f8f9fa;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 16px;
+                min-height: 60px;
+                display: flex;
+                align-items: center;
+            ">
+                <div id="liveAddressPreview" style="width: 100%;">
+                    <div style="color: #999; font-style: italic;">📍 Move map to select location</div>
+                </div>
+            </div>
+
+            <!-- Address Name Input (only shown for manual location selection) -->
+            <div class="address-name-container" id="addressNameContainer" style="
+                background: #fff;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 16px;
+                display: none;
+            ">
+                <label for="addressNameInput" style="
+                    display: block;
+                    color: #495057;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    font-size: 14px;
+                ">📝 Address Name (for easy identification): <span style="color: #dc3545;">*</span></label>
+                <input 
+                    type="text" 
+                    id="addressNameInput" 
+                    placeholder="e.g., Home, Office, Friend's Place" 
+                    maxlength="50"
+                    style="
+                        width: 100%;
+                        padding: 10px 12px;
+                        border: 1px solid #ced4da;
+                        border-radius: 6px;
+                        font-size: 14px;
+                        outline: none;
+                        transition: border-color 0.2s;
+                    "
+                    onkeypress="if(event.key==='Enter') saveNewAddress()"
+                >
+                <div style="color: #6c757d; font-size: 10px; margin-top: 4px;">
+                    <span style="color: #dc3545;">*Required</span> - This name will help you identify this address later
+                </div>
+            </div>
+            
+            <div class="address-form-buttons">
+                <button class="address-cancel-btn" onclick="closeAddressMapModal()">Cancel</button>
+                <button class="address-save-btn" onclick="saveNewAddress()">Save Address</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="adminPanel" class="admin-modal" style="display: none;">
+        <div class="admin-modal-content">
+            <div class="admin-header">
+                <h2>Admin Panel</h2>
+                <button class="close-btn" onclick="closeAdminPanel()">← Back</button>
+            </div>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="showTab('slides')">Slides</button>
+                <button class="tab-btn" onclick="showTab('categories')">Categories</button>
+                <button class="tab-btn" onclick="showTab('products')">Products</button>
+                <button class="tab-btn" onclick="showTab('events')">Events</button>
+                <button class="tab-btn" onclick="showTab('users')">Users</button>
+                <button class="tab-btn" onclick="showTab('ordersAdmin')">Orders</button>
+            </div>
+
+            <!-- Slides Section -->
+            <div id="slidesTab" class="tab-content active">
+                <h3>Slideshow Management</h3>
+{{ ... }}
+                <div class="slide-form">
+                    <input type="text" id="slideTitle" placeholder="Image Title" />
+                    <input type="url" id="slideUrl" placeholder="Image Link" />
+                    <button onclick="addSlide()">Add Slide</button>
+                </div>
+                <div class="slides-list" id="slidesList">
+                    <!-- Current slides will be populated here -->
+                </div>
+            </div>
+
+            <!-- Categories Section -->
+            <div id="categoriesTab" class="tab-content">
+                <h3>Category Management</h3>
+                <div class="slide-form">
+                    <input type="text" id="categoryName" placeholder="Category Name" />
+                    <input type="url" id="categoryImageUrl" placeholder="Category Image URL" />
+                    <input type="url" id="categoryBannerUrl" placeholder="Category Banner Image URL" style="margin-top: 10px;" />
+                    
+                    <!-- Subcategories Section -->
+                    <div style="margin: 15px 0; padding: 15px; border: 2px solid #e74c3c; border-radius: 8px; background: #fdf2f2;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #c0392b; font-size: 16px;">🏷️ Subcategories</label>
+                        <div id="subcategoriesContainer" style="margin-bottom: 10px;">
+                            <div class="subcategory-input-group" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" class="subcategory-name" placeholder="Subcategory Name" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                    <button type="button" onclick="removeSubcategoryInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 10px;">Remove</button>
+                                </div>
+                                <input type="url" class="subcategory-image" placeholder="Subcategory Image URL" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <input type="url" class="subcategory-banner" placeholder="Subcategory Banner Image URL" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
+                        <button type="button" onclick="addSubcategoryInput()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 10px; margin-top: 5px;">+ Add Subcategory</button>
+                    </div>
+                    
+                    <button onclick="addCategory()">Add Category</button>
+                </div>
+                
+                <!-- Search Bar for Categories -->
+                <div class="search-container" style="margin-bottom: 15px;">
+                    <input type="text" id="adminCategorySearchInput" placeholder="Search categories..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;" oninput="filterCategoriesAdmin()">
+                </div>
+                
+                <div class="categories-list" id="categoriesAdminList">
+                    <!-- Current categories will be populated here -->
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div id="productsTab" class="tab-content">
+                <h3>Product Management</h3>
+                <form class="admin-form" onsubmit="event.preventDefault(); addProduct();">
+                    <input type="text" id="productName" placeholder="Product Name" required>
+                    
+                    <!-- Main Product Image -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Main Product Image:</label>
+                        <input type="url" id="productImageUrl" placeholder="Main Product Image URL" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    
+                    <!-- Additional Product Images -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Additional Product Images:</label>
+                        <div id="additionalImagesContainer">
+                            <div class="image-input-group" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                                <input type="url" class="additional-image-url" placeholder="Additional Image URL" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                                <button type="button" onclick="removeImageInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 10px;">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addImageInput()" style="background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 10px; margin-top: 5px;">+ Add More Images</button>
+                    </div>
+                    
+                    <textarea id="productDescription" placeholder="Product Description" required></textarea>
+                    
+                    <!-- Returnable Option Section -->
+                    <div style="margin-bottom: 15px; padding: 15px; border: 2px solid #e74c3c; border-radius: 8px; background: #fdf2f2;">
+                        <h4 style="margin: 0 0 10px 0; color: #e74c3c; font-size: 14px;">🔄 Return Policy</h4>
+                        <div style="display: flex; gap: 20px; align-items: center;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="returnable" value="true" id="returnableYes" checked style="margin: 0;">
+                                <span style="color: #27ae60; font-weight: 600;">✅ Returnable</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="returnable" value="false" id="returnableNo" style="margin: 0;">
+                                <span style="color: #e74c3c; font-weight: 600;">❌ Non-Returnable</span>
+                            </label>
+                        </div>
+                        <p style="margin: 8px 0 0 0; font-size: 11px; color: #666;">Select whether customers can return this product after delivery</p>
+                    </div>
+                    
+                    <!-- Keywords Section -->
+                    <div style="margin-bottom: 15px; padding: 15px; border: 2px solid #3498db; border-radius: 8px; background: #f0f8ff;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #2980b9; font-size: 16px;">🔍 Search Keywords</label>
+                        <textarea id="productKeywords" placeholder="Enter search keywords separated by commas (e.g., mobile, phone, smartphone, android, 5g)" 
+                                  style="width: 100%; padding: 10px; border: 1px solid #3498db; border-radius: 5px; min-height: 60px; resize: vertical; font-family: inherit;"></textarea>
+                        <div style="font-size: 10px; color: #7f8c8d; margin-top: 5px;">
+                            💡 <strong>Tip:</strong> Add relevant keywords that customers might search for. Separate each keyword with a comma.
+                        </div>
+                    </div>
+                    
+                    <!-- Pricing Section -->
+                    <div style="margin-bottom: 15px; padding: 15px; border: 2px solid #f39c12; border-radius: 8px; background: #fef9e7;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #e67e22; font-size: 16px;">💰 Pricing & Discount</label>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50; font-size: 14px;">Original Price (₹):</label>
+                                <input type="number" id="productOriginalPrice" placeholder="Original/Cut Price" step="0.01" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" oninput="calculateMainProductFinalPrice()">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50; font-size: 14px;">Discount (%):</label>
+                                <input type="number" id="productDiscount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" oninput="calculateMainProductFinalPrice()">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #27ae60; font-size: 14px;">Final Price (₹):</label>
+                            <div id="productFinalPrice" style="width: 100%; padding: 10px; border: 1px solid #27ae60; border-radius: 5px; background: #e8f5e8; color: #27ae60; font-weight: 600; text-align: center; font-size: 18px;">₹0.00</div>
+                            <input type="hidden" id="productFinalPriceValue" value="0">
+                        </div>
+                    </div>
+                    
+                    <input type="number" id="deliveryCharge" placeholder="Delivery Charge (₹)" step="0.01" value="0">
+                    
+                    <!-- Star Rating Field -->
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Product Rating:</label>
+                        <select id="productRating" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                            <option value="">Select Rating</option>
+                            <option value="4.0">⭐⭐⭐⭐☆ 4.0 Stars</option>
+                            <option value="4.1">⭐⭐⭐⭐☆ 4.1 Stars</option>
+                            <option value="4.2">⭐⭐⭐⭐☆ 4.2 Stars</option>
+                            <option value="4.3">⭐⭐⭐⭐☆ 4.3 Stars</option>
+                            <option value="4.4">⭐⭐⭐⭐☆ 4.4 Stars</option>
+                            <option value="4.5">⭐⭐⭐⭐🌟 4.5 Stars</option>
+                            <option value="5.0">⭐⭐⭐⭐⭐ 5.0 Stars</option>
+                        </select>
+                    </div>
+                    <input type="text" id="productSubImages" placeholder="Sub Images URLs (comma separated)" style="display: none;">
+                    <!-- Main Categories Selection Section -->
+                    <div id="productCategoriesSection" style="margin: 15px 0; padding: 15px; border: 2px solid #e67e22; border-radius: 8px; background: #fef5e7;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #d35400; font-size: 16px;">🏪 Select Main Categories (Multiple Selection Allowed)</label>
+                        <div id="productCategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <!-- Category checkboxes will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Subcategories Selection Section -->
+                    <div id="productSubcategoriesSection" style="margin: 15px 0; padding: 15px; border: 2px solid #9b59b6; border-radius: 8px; background: #f8f4ff; display: none;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #8e44ad; font-size: 16px;">🏷️ Select Subcategories (Multiple Selection Allowed)</label>
+                        <div id="productSubcategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <!-- Subcategory checkboxes will be loaded here -->
+                        </div>
+                    </div>
+                    <!-- Size & Weight Based Pricing Section -->
+                    <div style="margin: 15px 0; padding: 15px; border: 2px solid #3498db; border-radius: 8px; background: #f8f9fa;">
+                        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #2980b9; font-size: 16px;">📏 Available Sizes & Weight-Based Pricing</label>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <!-- Regular Sizes -->
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                                <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="S" class="size-checkbox"> S</label>
+                                <input type="number" id="priceS" placeholder="Original Price for S" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateFinalPrice('S')">
+                                <input type="number" id="discountS" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateFinalPrice('S')">
+                                <div id="finalPriceS" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                                <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="M" class="size-checkbox"> M</label>
+                                <input type="number" id="priceM" placeholder="Original Price for M" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateFinalPrice('M')">
+                                <input type="number" id="discountM" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateFinalPrice('M')">
+                                <div id="finalPriceM" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                                <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="L" class="size-checkbox"> L</label>
+                                <input type="number" id="priceL" placeholder="Original Price for L" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateFinalPrice('L')">
+                                <input type="number" id="discountL" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateFinalPrice('L')">
+                                <div id="finalPriceL" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                                <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="XL" class="size-checkbox"> XL</label>
+                                <input type="number" id="priceXL" placeholder="Original Price for XL" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateFinalPrice('XL')">
+                                <input type="number" id="discountXL" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateFinalPrice('XL')">
+                                <div id="finalPriceXL" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                                <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="XXL" class="size-checkbox"> XXL</label>
+                                <input type="number" id="priceXXL" placeholder="Original Price for XXL" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateFinalPrice('XXL')">
+                                <input type="number" id="discountXXL" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateFinalPrice('XXL')">
+                                <div id="finalPriceXXL" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                            </div>
+                            
+                            <!-- Weight-Based Options -->
+                            <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #e74c3c;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #c0392b; font-size: 14px;">⚖️ Weight-Based Pricing Options</label>
+                                
+                                <!-- ML Options -->
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #c0392b;">Milliliters (ml):</label>
+                                    <div id="mlContainer">
+                                        <div class="weight-input-group" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                            <input type="text" class="weight-quantity" placeholder="Quantity (e.g., 100ml)" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;">
+                                            <input type="number" class="weight-price" placeholder="Original Price (₹)" step="0.01" min="0" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;" oninput="calculateWeightFinalPrice(this)">
+                                            <input type="number" class="weight-discount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 90px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateWeightFinalPrice(this)">
+                                            <div class="weight-final-price" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                                            <button type="button" onclick="removeWeightInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">Remove</button>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="addWeightInput('mlContainer', 'ml')" style="background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">+ Add ML Option</button>
+                                </div>
+                                
+                                <!-- Grams Options -->
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #c0392b;">Grams (g):</label>
+                                    <div id="gContainer">
+                                        <div class="weight-input-group" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                            <input type="text" class="weight-quantity" placeholder="Quantity (e.g., 250g)" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;">
+                                            <input type="number" class="weight-price" placeholder="Original Price (₹)" step="0.01" min="0" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;" oninput="calculateWeightFinalPrice(this)">
+                                            <input type="number" class="weight-discount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 90px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateWeightFinalPrice(this)">
+                                            <div class="weight-final-price" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                                            <button type="button" onclick="removeWeightInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">Remove</button>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="addWeightInput('gContainer', 'g')" style="background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">+ Add Gram Option</button>
+                                </div>
+                                
+                                <!-- Kilograms Options -->
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #c0392b;">Kilograms (kg):</label>
+                                    <div id="kgContainer">
+                                        <div class="weight-input-group" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                            <input type="text" class="weight-quantity" placeholder="Quantity (e.g., 1kg)" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;">
+                                            <input type="number" class="weight-price" placeholder="Original Price (₹)" step="0.01" min="0" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;" oninput="calculateWeightFinalPrice(this)">
+                                            <input type="number" class="weight-discount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 90px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateWeightFinalPrice(this)">
+                                            <div class="weight-final-price" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                                            <button type="button" onclick="removeWeightInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">Remove</button>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="addWeightInput('kgContainer', 'kg')" style="background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">+ Add KG Option</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="submit" class="btn-primary" style="flex: 1;">✅ Add Product</button>
+                        <button type="button" onclick="if(confirm('Are you sure you want to reset the entire form? All data will be lost.')) { resetProductForm(); showNotification('Form has been reset successfully!', 'success'); }" style="background: #95a5a6; color: white; border: none; padding: 18px 24px; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; flex: 0 0 auto;" onmouseover="this.style.background='#7f8c8d'" onmouseout="this.style.background='#95a5a6'">🔄 Reset Form</button>
+                    </div>
+                </form>
+                
+                <!-- Search Bar for Products -->
+                <div class="search-container" style="margin-bottom: 15px;">
+                    <input type="text" id="productSearchInput" placeholder="Search products..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;" oninput="loadProductsAdminData()">
+                </div>
+                
+                <div id="productsAdminList" style="max-height: 600px; overflow-y: auto;">
+                    <!-- Products will be populated here -->
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="usersTab" class="tab-content">
+                <h3>User Management</h3>
+                <div class="users-list" id="usersList">
+                    <!-- Registered users will be populated here -->
+                </div>
+            </div>
+
+            <!-- Admin Events Section -->
+            <div id="eventsTab" class="tab-content">
+                <h3>Event Management</h3>
+                
+                <!-- Event Type Selection -->
+                <div style="margin: 15px 0;">
+                    <h4>Select Event Type:</h4>
+                    <select id="eventType" onchange="toggleEventForm()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px;">
+                        <option value="product">📦 Product Event - Show selected products</option>
+                        <option value="category">🏷️ Category Event - Show category with subcategories</option>
+                    </select>
+                </div>
+
+                <!-- Event Form -->
+                <div class="event-form">
+                    <input type="text" id="eventName" placeholder="Event Name" />
+                    <input type="url" id="eventNameImage" placeholder="Event Name Image URL (will show instead of text)" />
+                    <input type="url" id="eventBackgroundImage" placeholder="Background Image URL" />
+                    
+                    <!-- Title Color Selection -->
+                    <div style="margin: 15px 0;">
+                        <h4>Select Title Color:</h4>
+                        <select id="eventTitleColor" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                            <option value="white">⚪ White - Best for dark backgrounds</option>
+                            <option value="black">⚫ Black - Best for light backgrounds</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Template Selection -->
+                    <div style="margin: 15px 0;">
+                        <h4>Select Card Template:</h4>
+                        <select id="eventTemplate" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                            <option value="template-1">🎯 Modern Scroll - Horizontal cards with smooth scrolling</option>
+                            <option value="template-2">📱 Smart Grid - Responsive grid layout</option>
+                            <option value="template-4">💎 Compact Pro - Space-efficient premium cards</option>
+                        </select>
+                        
+                        <!-- Template Preview -->
+                        <div style="margin: 10px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <h5 style="margin: 0 0 10px 0; color: #495057;">Template Preview:</h5>
+                            <div id="templatePreview" style="font-size: 14px; color: #6c757d;">
+                                <strong>Template 1:</strong> Horizontal scrolling cards (180px width)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Product Event Form -->
+                    <div id="productEventForm" style="margin: 15px 0;">
+                        <h4>Select Products:</h4>
+                        <div style="margin-bottom: 10px;">
+                            <input type="text" id="eventProductSearch" placeholder="Search products..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                        <div id="eventProductSelection" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+                            <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Category Event Form -->
+                    <div id="categoryEventForm" style="margin: 15px 0; display: none;">
+                        <!-- Custom Event Name Input -->
+                        <div style="margin-bottom: 15px;">
+                            <h4>Custom Event Name:</h4>
+                            <input type="text" id="categoryEventName" placeholder="Enter custom event name (will show instead of category name)" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 5px;">
+                            <div style="font-size: 10px; color: #666; padding: 8px; background: #e8f5e8; border-radius: 5px;">
+                                <strong>💡 Tip:</strong> This custom name will be displayed on the event card instead of the category name.
+                            </div>
+                        </div>
+                        
+                        <h4>Select Category:</h4>
+                        <select id="eventCategorySelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px;">
+                            <option value="">Choose a category...</option>
+                            <!-- Categories will be loaded here -->
+                        </select>
+                        
+                        <!-- Display Location Selection -->
+                        <div style="margin: 15px 0;">
+                            <h4>Choose Display Location:</h4>
+                            <select id="categoryEventLocation" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px;">
+                                <option value="home">🏠 Home Page Only</option>
+                                <option value="categories">📂 Categories Section Only</option>
+                                <option value="both">🌟 Both Home & Categories</option>
+                            </select>
+                            <div style="font-size: 10px; color: #666; margin-top: 5px; padding: 8px; background: #f8f9fa; border-radius: 5px;">
+                                <strong>Note:</strong> Choose where this category event card should appear in your app.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="addEvent()">Add Event</button>
+                </div>
+                
+                <!-- Events List -->
+                <div class="events-list" id="eventsList">
+                    <!-- Current events will be populated here -->
+                </div>
+            </div>
+
+            <!-- Admin Orders Section -->
+            <div id="ordersAdminTab" class="tab-content">
+                <h3>Order Management</h3>
+                
+                <!-- Orders/Refund Switch -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+                    <button id="ordersSwitch" class="switch-btn active" onclick="switchOrderSection('orders')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 25px; font-size: 14px; cursor: pointer; font-weight: 600;">Orders</button>
+                    <button id="refundSwitch" class="switch-btn" onclick="switchOrderSection('refund')" style="padding: 10px 20px; background: #f8f9fa; color: #666; border: 1px solid #ddd; border-radius: 25px; font-size: 14px; cursor: pointer; font-weight: 600;">Refund Requests</button>
+                </div>
+                
+                <!-- Orders Section -->
+                <div id="ordersSection">
+                    <!-- Filter and Search Controls -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <select id="orderStatusFilter" onchange="filterOrders()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px;">
+                        <option value="all">All Orders</option>
+                        <option value="Pending">Pending Orders</option>
+                        <option value="Shipped">Shipped Orders</option>
+                    </select>
+                    
+                    <input type="text" id="orderSearchInput" placeholder="Search by email or phone..." onkeyup="searchOrders()" style="flex: 1; width: 90vw; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px;">
+                    
+                    <button onclick="clearFilters()" style="padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 5px; font-size: 13px; cursor: pointer;">Clear</button>
+                </div>
+                
+                <div class="admin-list" id="adminOrdersList">
+                    <!-- Orders will be populated here -->
+                </div>
+                </div>
+                
+                <!-- Refund Section -->
+                <div id="refundSection" style="display: none;">
+                    <div style="text-align: center; padding: 20px; color: #666; margin-bottom: 20px;">
+                        <h4>Refund Requests</h4>
+                        <p>Manage customer refund requests here</p>
+                    </div>
+                    
+                    <div class="admin-list" id="adminRefundsList">
+                        <!-- Refund requests will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="productModal" class="product-modal">
+        <div class="product-modal-content">
+            <div class="product-modal-header">
+                <h2>Product Details</h2>
+                <button class="close-btn" onclick="closeProductModal()">← Back</button>
+            </div>
+            <div class="product-modal-body" id="productModalBody">
+                <!-- Product details will be populated here -->
+            </div>
+            
+            <!-- Ficokart Footer -->
+            <div class="ficokart-footer">
+                <div class="container">
+                    <div class="footer-content">
+                        <img src="logo.png" alt="Ficokart Logo" class="footer-logo" onerror="this.style.display='none'">
+                        <span class="footer-text">Ficokart</span>
+                    </div>
+                    <div class="footer-reserved">All Rights Reserved</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Order Modal -->
+    <div id="confirmOrderModal" class="product-modal">
+        <div class="product-modal-content">
+            <div class="product-modal-header">
+                <h2>Confirm Order</h2>
+                <button class="close-btn" onclick="closeConfirmOrderModal()">← Back</button>
+            </div>
+            <div class="product-modal-body" id="confirmOrderModalBody">
+                <!-- Order confirmation details will be populated here -->
+            </div>
+            
+            <!-- Ficokart Footer -->
+            <div class="ficokart-footer">
+                <div class="container">
+                    <div class="footer-content">
+                        <img src="logo.png" alt="Ficokart Logo" class="footer-logo" onerror="this.style.display='none'">
+                        <span class="footer-text">Ficokart</span>
+                    </div>
+                    <div class="footer-reserved">All Rights Reserved</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Update Categories Modal -->
+    <div id="updateCategoriesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #1a202c; font-size: 20px;">Update Product Categories</h3>
+                <button onclick="closeUpdateCategoriesModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+            </div>
+            
+            <div id="updateProductInfo" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <!-- Product info will be displayed here -->
+            </div>
+            
+            <!-- Main Categories Selection -->
+            <div style="margin: 20px 0; padding: 15px; border: 2px solid #e67e22; border-radius: 8px; background: #fef5e7;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #d35400; font-size: 16px;">🏪 Select Main Categories (Multiple Selection Allowed)</label>
+                <div id="updateCategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <!-- Category checkboxes will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Subcategories Selection -->
+            <div id="updateSubcategoriesSection" style="margin: 20px 0; padding: 15px; border: 2px solid #9b59b6; border-radius: 8px; background: #f8f4ff;">
+                <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #8e44ad; font-size: 16px;">🏷️ Select Subcategories (Multiple Selection Allowed)</label>
+                <div id="updateSubcategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <!-- Subcategory checkboxes will be loaded here -->
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button onclick="closeUpdateCategoriesModal()" style="background: #6b7280; color: white; border: none; padding: 18px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                <button onclick="updateProductCategories()" style="background: #10b981; color: white; border: none; padding: 18px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Update Categories</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div id="categoryModal" class="category-modal">
+        <div class="category-modal-content">
+            <div class="category-modal-header">
+                <h2 id="categoryModalTitle" class="category-modal-title">Category Products</h2>
+                <button class="category-back-btn" onclick="window.closeCategoryModal()">← Back</button>
+            </div>
+            <div class="category-search-section">
+                <div class="category-search-container">
+                    <div class="category-search-input-wrapper">
+                        <input type="text" id="categorySearchInput" placeholder="Search products in this category..." oninput="window.searchCategoryProducts()">
+                        <button class="category-search-icon-btn" onclick="window.searchCategoryProducts()">🔍</button>
+                    </div>
+                    <!-- Category Banner Section -->
+                    <div class="category-banner-section" id="categoryBannerSection">
+                        <img id="categoryBannerImage" src="" alt="Category Banner" class="category-banner-image">
+                    </div>
+                </div>
+            </div>
+            <!-- Category Modal Body with Sidebar and Products -->
+            <div class="category-modal-body">
+                <!-- Subcategories Sidebar -->
+                <div class="category-sidebar">
+                    <h3 class="subcategories-sidebar-title">Filter</h3>
+                    <div class="subcategories-list" id="categoryModalSubcategories">
+                        <!-- Subcategories will be loaded here -->
+                    </div>
+                </div>
+                <!-- Products Area -->
+                <div class="category-products-area">
+                    <div class="category-products-grid" id="categoryProductsGrid">
+                        <!-- Products will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Ficokart Footer -->
+        <div class="ficokart-footer">
+            <div class="container">
+                <div class="footer-content">
+                    <img src="logo.png" alt="Ficokart Logo" class="footer-logo" onerror="this.style.display='none'">
+                    <span class="footer-text">Ficokart</span>
+                </div>
+                <div class="footer-reserved">All Rights Reserved</div>
+            </div>
+        </div>
+
+        <!-- Floating Cart Notification Box -->
+        <div class="floating-cart-notification" id="floatingCartNotification" onclick="redirectToCart()">
+            <div class="cart-notification-images" id="cartNotificationImages">
+                <!-- Product images will be populated here -->
+            </div>
+            <div class="cart-notification-content">
+                <div class="cart-notification-title">View cart</div>
+                <div class="cart-notification-count" id="cartNotificationCount">1 item</div>
+                <div class="cart-notification-total" id="cartNotificationTotal">₹0</div>
+            </div>
+        </div>
+
+        <!-- App Bottom Navigation -->
+        <div class="app-bottom-nav">
+            <div class="app-nav-item active" onclick="setActiveTab('home')">
+                <div class="app-nav-icon">
+                    <img src="home.png" alt="Home">
+                </div>
+                <div class="app-nav-label">Home</div>
+            </div>
+            <div class="app-nav-item" onclick="setActiveTab('categories')">
+                <div class="app-nav-icon">
+                    <img src="cat.png" alt="Categories">
+                </div>
+                <div class="app-nav-label">Categories</div>
+            </div>
+            <div class="app-nav-item" onclick="checkAuthAndSetTab('orders')">
+                <div class="app-nav-icon">
+                    <img src="order.png" alt="Orders">
+                </div>
+                <div class="app-nav-label">Orders</div>
+            </div>
+            <div class="app-nav-item" onclick="checkAuthAndSetTab('profile')">
+                <div class="app-nav-icon">
+                    <img src="profile.png" alt="Profile">
+                </div>
+                <div class="app-nav-label">Profile</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Category Modal -->
+    <div id="editCategoryModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="max-width: 800px; width: 90%; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="padding: 20px; border-bottom: 1px solid #e5e7eb; background: #f59e0b; color: white; border-radius: 12px 12px 0 0; position: relative;">
+                <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Edit Product Category</h3>
+                <button onclick="closeEditCategoryModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <!-- Main Categories Selection Section -->
+                <div id="editProductCategoriesSection" style="margin: 15px 0; padding: 15px; border: 2px solid #e67e22; border-radius: 8px; background: #fef5e7;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #d35400; font-size: 16px;">🏪 Select Main Categories (Multiple Selection Allowed)</label>
+                    <div id="editProductCategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <!-- Category checkboxes will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Subcategories Selection Section -->
+                <div id="editProductSubcategoriesSection" style="margin: 15px 0; padding: 15px; border: 2px solid #9b59b6; border-radius: 8px; background: #f8f4ff; display: none;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #8e44ad; font-size: 16px;">🏷️ Select Subcategories (Multiple Selection Allowed)</label>
+                    <div id="editProductSubcategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <!-- Subcategory checkboxes will be loaded here -->
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closeEditCategoryModal()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button onclick="updateProductCategory()" style="padding: 10px 20px; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Update Category</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 10000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0; color: #1a202c; font-size: 20px;">Edit Product</h3>
+                <button onclick="closeEditProductModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+            </div>
+            
+            <form onsubmit="event.preventDefault(); updateEditedProduct();">
+                <input type="text" id="editProductName" placeholder="Product Name" required>
+                
+                <!-- Main Product Image -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Main Product Image:</label>
+                    <input type="url" id="editProductImageUrl" placeholder="Main Product Image URL" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                
+                <!-- Additional Product Images -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Additional Product Images:</label>
+                    <div id="editAdditionalImagesContainer">
+                        <!-- Additional image inputs will be added here -->
+                    </div>
+                    <button type="button" onclick="addEditImageInput()" style="background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 10px; margin-top: 5px;">+ Add More Images</button>
+                </div>
+                
+                <textarea id="editProductDescription" placeholder="Product Description" required></textarea>
+                
+                <!-- Returnable Option Section -->
+                <div style="margin-bottom: 15px; padding: 15px; border: 2px solid #e74c3c; border-radius: 8px; background: #fdf2f2;">
+                    <h4 style="margin: 0 0 10px 0; color: #e74c3c; font-size: 14px;">🔄 Return Policy</h4>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="editReturnable" value="true" id="editReturnableYes" style="margin: 0;">
+                            <span style="color: #27ae60; font-weight: 600;">✅ Returnable</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="editReturnable" value="false" id="editReturnableNo" style="margin: 0;">
+                            <span style="color: #e74c3c; font-weight: 600;">❌ Non-Returnable</span>
+                        </label>
+                    </div>
+                    <p style="margin: 8px 0 0 0; font-size: 11px; color: #666;">Select whether customers can return this product after delivery</p>
+                </div>
+                
+                <!-- Keywords Section -->
+                <div style="margin-bottom: 15px; padding: 15px; border: 2px solid #3498db; border-radius: 8px; background: #f0f8ff;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #2980b9; font-size: 16px;">🔍 Search Keywords</label>
+                    <textarea id="editProductKeywords" placeholder="Enter search keywords separated by commas (e.g., mobile, phone, smartphone, android, 5g)" 
+                              style="width: 100%; padding: 10px; border: 1px solid #3498db; border-radius: 5px; min-height: 60px; resize: vertical; font-family: inherit;"></textarea>
+                    <div style="font-size: 10px; color: #7f8c8d; margin-top: 5px;">
+                        💡 <strong>Tip:</strong> Add relevant keywords that customers might search for. Separate each keyword with a comma.
+                    </div>
+                </div>
+                
+                <!-- Pricing Section -->
+                <div style="margin-bottom: 15px; padding: 15px; border: 2px solid #f39c12; border-radius: 8px; background: #fef9e7;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #e67e22; font-size: 16px;">💰 Pricing & Discount</label>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50; font-size: 14px;">Original Price (₹):</label>
+                            <input type="number" id="editProductOriginalPrice" placeholder="Original/Cut Price" step="0.01" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" oninput="calculateEditProductFinalPrice()">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50; font-size: 14px;">Discount (%):</label>
+                            <input type="number" id="editProductDiscount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" oninput="calculateEditProductFinalPrice()">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #27ae60; font-size: 14px;">Final Price (₹):</label>
+                        <div id="editProductFinalPrice" style="width: 100%; padding: 10px; border: 1px solid #27ae60; border-radius: 5px; background: #e8f5e8; color: #27ae60; font-weight: 600; text-align: center; font-size: 18px;">₹0.00</div>
+                        <input type="hidden" id="editProductFinalPriceValue" value="0">
+                    </div>
+                </div>
+                
+                <input type="number" id="editDeliveryCharge" placeholder="Delivery Charge (₹)" step="0.01" value="0">
+                
+                <!-- Star Rating Field -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Product Rating:</label>
+                    <select id="editProductRating" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" required>
+                        <option value="">Select Rating</option>
+                        <option value="4.0">⭐⭐⭐⭐☆ 4.0 Stars</option>
+                        <option value="4.1">⭐⭐⭐⭐☆ 4.1 Stars</option>
+                        <option value="4.2">⭐⭐⭐⭐☆ 4.2 Stars</option>
+                        <option value="4.3">⭐⭐⭐⭐☆ 4.3 Stars</option>
+                        <option value="4.4">⭐⭐⭐⭐☆ 4.4 Stars</option>
+                        <option value="4.5">⭐⭐⭐⭐🌟 4.5 Stars</option>
+                        <option value="5.0">⭐⭐⭐⭐⭐ 5.0 Stars</option>
+                    </select>
+                </div>
+                
+                <!-- Main Categories Selection Section -->
+                <div id="editProductCategoriesSection" style="margin: 15px 0; padding: 15px; border: 2px solid #e67e22; border-radius: 8px; background: #fef5e7;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #d35400; font-size: 16px;">🏪 Select Main Categories (Multiple Selection Allowed)</label>
+                    <div id="editCategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <!-- Category checkboxes will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Subcategories Selection Section -->
+                <div id="editSubcategoriesSection" style="margin: 15px 0; padding: 15px; border: 2px solid #9b59b6; border-radius: 8px; background: #f8f4ff; display: none;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #8e44ad; font-size: 16px;">🏷️ Select Subcategories (Multiple Selection Allowed)</label>
+                    <div id="editSubcategoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <!-- Subcategory checkboxes will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Size & Weight Based Pricing Section -->
+                <div style="margin: 15px 0; padding: 15px; border: 2px solid #3498db; border-radius: 8px; background: #f8f9fa;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #2980b9; font-size: 16px;">📏 Available Sizes & Weight-Based Pricing</label>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <!-- Regular Sizes -->
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                            <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="S" class="edit-size-checkbox"> S</label>
+                            <input type="number" id="editPriceS" placeholder="Original Price for S" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateEditFinalPrice('S')">
+                            <input type="number" id="editDiscountS" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditFinalPrice('S')">
+                            <div id="editFinalPriceS" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                            <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="M" class="edit-size-checkbox"> M</label>
+                            <input type="number" id="editPriceM" placeholder="Original Price for M" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateEditFinalPrice('M')">
+                            <input type="number" id="editDiscountM" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditFinalPrice('M')">
+                            <div id="editFinalPriceM" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                            <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="L" class="edit-size-checkbox"> L</label>
+                            <input type="number" id="editPriceL" placeholder="Original Price for L" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateEditFinalPrice('L')">
+                            <input type="number" id="editDiscountL" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditFinalPrice('L')">
+                            <div id="editFinalPriceL" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                            <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="XL" class="edit-size-checkbox"> XL</label>
+                            <input type="number" id="editPriceXL" placeholder="Original Price for XL" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateEditFinalPrice('XL')">
+                            <input type="number" id="editDiscountXL" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditFinalPrice('XL')">
+                            <div id="editFinalPriceXL" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;">
+                            <label style="display: flex; align-items: center; gap: 5px; min-width: 70px; font-weight: 600;"><input type="checkbox" value="XXL" class="edit-size-checkbox"> XXL</label>
+                            <input type="number" id="editPriceXXL" placeholder="Original Price for XXL" step="0.01" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" oninput="calculateEditFinalPrice('XXL')">
+                            <input type="number" id="editDiscountXXL" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 100px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditFinalPrice('XXL')">
+                            <div id="editFinalPriceXXL" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                        </div>
+                        
+                        <!-- Weight-Based Options -->
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #e74c3c;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #c0392b; font-size: 14px;">⚖️ Weight-Based Pricing Options</label>
+                            
+                            <!-- ML Options -->
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #c0392b;">Milliliters (ml):</label>
+                                <div id="editMlContainer">
+                                    <div class="edit-weight-input-group" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                        <input type="text" class="edit-weight-quantity" placeholder="Quantity (e.g., 100ml)" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;">
+                                        <input type="number" class="edit-weight-price" placeholder="Original Price (₹)" step="0.01" min="0" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;" oninput="calculateEditWeightFinalPrice(this)">
+                                        <input type="number" class="edit-weight-discount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 90px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditWeightFinalPrice(this)">
+                                        <div class="edit-weight-final-price" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                                        <button type="button" onclick="removeEditWeightInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addEditWeightInput('editMlContainer', 'ml')" style="background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">+ Add ML Option</button>
+                            </div>
+                            
+                            <!-- Grams Options -->
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #c0392b;">Grams (g):</label>
+                                <div id="editGContainer">
+                                    <div class="edit-weight-input-group" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                        <input type="text" class="edit-weight-quantity" placeholder="Quantity (e.g., 250g)" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;">
+                                        <input type="number" class="edit-weight-price" placeholder="Original Price (₹)" step="0.01" min="0" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;" oninput="calculateEditWeightFinalPrice(this)">
+                                        <input type="number" class="edit-weight-discount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 90px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditWeightFinalPrice(this)">
+                                        <div class="edit-weight-final-price" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                                        <button type="button" onclick="removeEditWeightInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addEditWeightInput('editGContainer', 'g')" style="background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">+ Add Gram Option</button>
+                            </div>
+                            
+                            <!-- Kilograms Options -->
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #c0392b;">Kilograms (kg):</label>
+                                <div id="editKgContainer">
+                                    <div class="edit-weight-input-group" style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
+                                        <input type="text" class="edit-weight-quantity" placeholder="Quantity (e.g., 1kg)" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;">
+                                        <input type="number" class="edit-weight-price" placeholder="Original Price (₹)" step="0.01" min="0" style="width: 120px; padding: 8px; border: 1px solid #e74c3c; border-radius: 4px;" oninput="calculateEditWeightFinalPrice(this)">
+                                        <input type="number" class="edit-weight-discount" placeholder="Discount %" min="0" max="99" step="1" value="0" style="width: 90px; padding: 8px; border: 1px solid #f39c12; border-radius: 4px; background: #fef9e7;" oninput="calculateEditWeightFinalPrice(this)">
+                                        <div class="edit-weight-final-price" style="min-width: 80px; padding: 8px; background: #e8f5e8; border: 1px solid #27ae60; border-radius: 4px; font-weight: 600; color: #27ae60; text-align: center;">₹0</div>
+                                        <button type="button" onclick="removeEditWeightInput(this)" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">Remove</button>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="addEditWeightInput('editKgContainer', 'kg')" style="background: #c0392b; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 10px;">+ Add KG Option</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Update Button -->
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" onclick="closeEditProductModal()" style="background: #6b7280; color: white; border: none; padding: 18px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+                    <button type="button" onclick="updateEditedProduct()" style="background: #10b981; color: white; border: none; padding: 18px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">Update Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delivery Panel Modal -->
+    <div id="deliveryPanel" class="admin-modal" style="display: none;">
+        <div class="admin-modal-content">
+            <div class="admin-header">
+                <h2>🚚 Delivery Management Panel</h2>
+                <button class="close-btn" onclick="closeDeliveryPanel()">← Back</button>
+            </div>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="showDeliveryTab('ordersDelivery')">Orders</button>
+            </div>
+
+            <!-- Admin Orders Section (Exact Copy) -->
+            <div id="ordersDeliveryTab" class="tab-content active">
+                <h3>Order Management</h3>
+                
+                <!-- Orders/Refund Switch -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
+                    <button id="deliveryOrdersSwitch" onclick="switchDeliveryOrderSection('orders')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📦 Orders</button>
+                    <button id="deliveryRefundSwitch" onclick="switchDeliveryOrderSection('refund')" style="padding: 10px 20px; background: #f8f9fa; color: #666; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600;">💰 Refund Requests</button>
+                </div>
+                
+                <!-- Orders Section -->
+                <div id="deliveryOrdersSection">
+                
+                <!-- Filter and Search Controls -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <select id="deliveryOrderStatusFilter" onchange="filterDeliveryOrders()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px;">
+                        <option value="all">All Orders</option>
+                        <option value="Pending">Pending Orders</option>
+                        <option value="Shipped">Shipped Orders</option>
+                    </select>
+                    
+                    <input type="text" id="deliveryOrderSearchInput" placeholder="Search by email or phone..." onkeyup="searchDeliveryOrders()" style="flex: 1; width: 90vw; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px;">
+                    
+                    <button onclick="clearDeliveryFilters()" style="padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 5px; font-size: 13px; cursor: pointer;">Clear</button>
+                </div>
+                
+                <div class="admin-list" id="deliveryOrdersList">
+                    <!-- Orders will be populated here -->
+                </div>
+                </div>
+                
+                <!-- Refund Section -->
+                <div id="deliveryRefundSection" style="display: none;">
+                    <div class="admin-list" id="deliveryRefundsList">
+                        <!-- Refund requests will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoiceModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; z-index: 10000; overflow-y: auto;">
+        <div style="position: relative; width: 100%; height: 100%; min-height: 100vh;">
+            <!-- Modal Header -->
+            <div style="position: sticky; top: 0; background: white; padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; z-index: 1;">
+                <h2 style="margin: 0; color: #2c3e50; font-size: 20px;">Invoice Bill</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <!-- Print button - only visible on desktop -->
+                    <button id="printInvoiceBtn" onclick="printInvoice()" style="background: #27ae60; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s ease; display: none;">
+                        🖨️ Print
+                    </button>
+                    <button onclick="closeInvoiceModal()" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease;">
+                        ✕
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div id="invoiceContent" style="padding: 20px; height: calc(100vh - 70px); overflow-y: auto;">
+                <!-- Invoice content will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallet Modal -->
+    <div id="walletModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; width: 90%; max-width: 400px; padding: 30px; position: relative;">
+            <button onclick="closeWalletModal()" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 8px; width: 35px; height: 35px; cursor: pointer;">✕</button>
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">💰</div>
+                <h2 style="color: white; margin: 0; font-size: 28px;">My Wallet</h2>
+                <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0;">Your cashback balance</p>
+            </div>
+            
+            <!-- Earned Cashback (Available to use) -->
+            <div style="background: rgba(255,255,255,0.15); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="color: rgba(255,255,255,0.7); font-size: 14px;">💰 Earned Cashback</div>
+                    <div style="color: #10b981; font-size: 10px; background: rgba(16,185,129,0.2); padding: 4px 8px; border-radius: 8px;">Available</div>
+                </div>
+                <div id="earnedCashback" style="color: white; font-size: 28px; font-weight: 800;">₹0</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 10px; margin-top: 5px;">Ready to use in next order</div>
+            </div>
+            
+            <!-- Pending Cashback (Waiting for order completion) -->
+            <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="color: rgba(255,255,255,0.7); font-size: 14px;">⏳ Pending Cashback</div>
+                    <div style="color: #f59e0b; font-size: 10px; background: rgba(245,158,11,0.2); padding: 4px 8px; border-radius: 8px;">Processing</div>
+                </div>
+                <div id="pendingCashback" style="color: white; font-size: 24px; font-weight: 700;">₹0</div>
+                <div style="color: rgba(255,255,255,0.6); font-size: 10px; margin-top: 5px;">Will be available after order completion</div>
+            </div>
+            
+            <!-- Refund Credits Section -->
+            <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                <div style="color: white; font-weight: 600; margin-bottom: 10px;">💸 Refund Credits</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 14px;">Refunded amounts are added to your earned cashback</div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+                <div style="color: white; font-weight: 600; margin-bottom: 10px;">🎁 Cashback Rewards</div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 14px;">Get Cashback on your every order</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cashback Reward Card -->
+    <div id="cashbackRewardCard" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.9); z-index: 20000; align-items: center; justify-content: center;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 25px; width: 90%; max-width: 350px; padding: 40px 30px; text-align: center; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.4); animation: cardFlipIn 0.8s ease-out;">
+            
+            <!-- Congratulations Header -->
+            <div style="margin-bottom: 25px;">
+                <h2 style="color: white; font-size: 28px; font-weight: 800; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🎉 Congratulations!</h2>
+                <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 16px;">You earned cashback!</p>
+            </div>
+            
+            <!-- Money Icon -->
+            <div style="font-size: 64px; margin: 20px 0; animation: bounceIn 1s ease-out 0.3s both;">💰</div>
+            
+            <!-- Cashback Amount -->
+            <div style="background: rgba(255,255,255,0.2); border-radius: 15px; padding: 20px; margin: 25px 0; backdrop-filter: blur(10px);">
+                <div style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 5px;">Cashback Earned</div>
+                <div id="cashbackAmount" style="color: white; font-size: 36px; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">₹0</div>
+            </div>
+            
+            <!-- Collect Button -->
+            <button id="collectCashbackBtn" onclick="collectCashback()" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(251, 191, 36, 0.4); transition: all 0.3s ease; width: 100%;">
+                ✨ Collect Reward
+            </button>
+        </div>
+    </div>
+
+    <!-- Address Bottom Popup Modal -->
+    <div id="addressPopupModal" class="address-popup-modal" onclick="closeAddressPopup(event)">
+        <div class="address-popup-content" onclick="event.stopPropagation()">
+            <div class="address-popup-header">
+                <div class="address-popup-handle"></div>
+                <h3 class="address-popup-title">Select Delivery Address</h3>
+            </div>
+            <div class="address-popup-buttons" id="addressPopupButtons">
+                <!-- Buttons will be dynamically added based on user login status -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Size Variant Popup Modal -->
+    <div id="sizeVariantModal" class="size-variant-modal" onclick="closeSizeVariantModal(event)">
+        <div class="size-variant-content" onclick="event.stopPropagation()">
+            <button class="size-variant-close" onclick="closeSizeVariantModal()">&times;</button>
+            <div class="size-variant-header">
+                <h3 class="size-variant-title" id="sizeVariantTitle">Select Size</h3>
+            </div>
+            <div class="size-variant-body" id="sizeVariantBody">
+                <!-- Size variants will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Razorpay Payment Modal -->
+    <div id="razorpayPaymentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); z-index: 15000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 20px; width: 90%; max-width: 400px; padding: 30px; text-align: center; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.4);">
+            <div style="margin-bottom: 25px;">
+                <div style="font-size: 48px; margin-bottom: 15px;">💳</div>
+                <h2 style="color: #2c3e50; margin: 0; font-size: 24px; font-weight: 700;">Online Payment</h2>
+                <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Secure payment via Razorpay</p>
+            </div>
+            
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745;">
+                <div style="color: #666; font-size: 14px; margin-bottom: 5px;">Total Amount</div>
+                <div id="razorpayAmount" style="color: #2c3e50; font-size: 28px; font-weight: 800;">₹0</div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+                <button onclick="closeRazorpayModal()" style="background: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">Cancel</button>
+                <button id="razorpayPayBtn" onclick="initiateRazorpayPayment()" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
