@@ -18410,3 +18410,43 @@ async function handlePaymentSuccessForAllCartItems(paymentResponse) {
     }
 }
 
+(function() {
+    // Right-click disable
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Keydown blocks: F12, Ctrl+Shift+I/J/C/U/S
+    document.addEventListener('keydown', e => {
+        if (e.keyCode === 123) e.preventDefault(); // F12
+        if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) e.preventDefault(); // Inspect/Console
+        if (e.ctrlKey && e.keyCode === 85) e.preventDefault(); // View Source
+        if (e.ctrlKey && e.keyCode === 83) e.preventDefault(); // Save
+    }, false);
+
+    // Text selection, copy, cut, paste disable
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('paste', e => e.preventDefault());
+
+    // DevTools detection (window resize trick)
+    let devtoolsOpen = false;
+    setInterval(() => {
+        const outerW = window.outerWidth;
+        const innerW = window.innerWidth;
+        const outerH = window.outerHeight;
+        const innerH = window.innerHeight;
+        if ((outerW - innerW > 160 || outerH - innerH > 160) && !devtoolsOpen) {
+            devtoolsOpen = true;
+            alert('DevTools open mat karo bhai!');
+            location.reload();
+        } else if (outerW - innerW < 160 && outerH - innerH < 160) {
+            devtoolsOpen = false;
+        }
+    }, 500);
+
+    // Drag image/text disable
+    document.addEventListener('dragstart', e => e.preventDefault());
+
+    console.log('DevTools protection enabled!'); // Self-clear console hint
+})();
+
