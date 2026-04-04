@@ -1,4 +1,4 @@
-const express = require('express');
+obni' express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -15,8 +15,8 @@ app.use(bodyParser.json());
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'moghaeashu@gmail.com', // Aapki email id
-        pass: 'uqdc djwy qjup obni'    // Gmail App Password (Normal password nahi chalega)
+        user: 'ficokart.support@gmail.com', // Aapki email id
+        pass: 'nnhk duzq ynsd jqae'    // Gmail App Password (Normal password nahi chalega)
     }
 });
 
