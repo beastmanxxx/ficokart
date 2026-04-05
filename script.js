@@ -422,7 +422,7 @@ async function notifyAdminsByEmail(orderData) {
         console.log("Admin list:", adminEmails);
 
         // 3. Send to our Local Node.js Backend Server
-        const response = await fetch('http://localhost:5000/send-order-email', {
+        const response = await fetch('https://ficokart.onrender.com/send-order-email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
